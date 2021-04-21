@@ -1,6 +1,6 @@
 'use strict';
 
-function layerFactory (L) {
+function layerFactory (L, rbush) {
 
     function extend (Parent, props) {
         var NewClass = function () {
