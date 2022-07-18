@@ -1,10 +1,11 @@
-'use strict';
+"use strict";
 
-function layerFactory (L, rbush) {
-
-    function extend (Parent, props) {
+function layerFactory(L, rbush) {
+    function extend(Parent, props) {
         var NewClass = function () {
-            if (this.init) { this.init.apply(this, arguments); }
+            if (this.init) {
+                this.init.apply(this, arguments);
+            }
         };
         var proto = L.Util.create(Parent.prototype);
         L.Util.extend(proto, props);
@@ -28,22 +29,26 @@ function layerFactory (L, rbush) {
             this.load(this._batch);
             this._batch.length = 0;
             return this;
-        }
+        },
     });
 
     var LatLngsIndex = extend(Common, {
         toBBox: function (marker) {
             var ll = marker._latlng;
-            return {minX: ll.lng, minY: ll.lat, maxX: ll.lng, maxY: ll.lat};
+            return { minX: ll.lng, minY: ll.lat, maxX: ll.lng, maxY: ll.lat };
         },
-        compareMinX: function (a, b) { return a._latlng.lng - b._latlng.lng; },
-        compareMinY: function (a, b) { return a._latlng.lat - b._latlng.lat; },
+        compareMinX: function (a, b) {
+            return a._latlng.lng - b._latlng.lng;
+        },
+        compareMinY: function (a, b) {
+            return a._latlng.lat - b._latlng.lat;
+        },
         searchIn: function (bounds) {
             return this.search({
                 minX: bounds.getWest(),
                 minY: bounds.getSouth(),
                 maxX: bounds.getEast(),
-                maxY: bounds.getNorth()
+                maxY: bounds.getNorth(),
             });
         },
         init: function () {
@@ -53,7 +58,7 @@ function layerFactory (L, rbush) {
         },
         // If we are 10% individual inserts\removals, reconstruct lookup for efficiency
         cleanup: function () {
-            if (this._dirty / this._total >= .1) {
+            if (this._dirty / this._total >= 0.1) {
                 var all = this.all();
                 this.clear();
                 this._dirty = 0;
@@ -74,7 +79,7 @@ function layerFactory (L, rbush) {
             this._dirty = 0;
             this._total = 0;
             return rbush.prototype.clear.apply(this);
-        }
+        },
     });
 
     var PointsIndex = extend(Common, {
@@ -90,16 +95,24 @@ function layerFactory (L, rbush) {
                 maxY: pos.y + adj_y,
             };
         },
-        compareMinX: function (a, b) { return a._point.x - b._point.x; },
-        compareMinY: function (a, b) { return a._point.y - b._point.y; },
+        compareMinX: function (a, b) {
+            return a._point.x - b._point.x;
+        },
+        compareMinY: function (a, b) {
+            return a._point.y - b._point.y;
+        },
         searchBy: function (point) {
             return this.search({
-                minX: point.x, minY: point.y, maxX: point.x, maxY: point.y
+                minX: point.x,
+                minY: point.y,
+                maxX: point.x,
+                maxY: point.y,
             });
-        }
+        },
     });
 
-    var CanvasIconLayer = L.Layer.extend({ // todo inherit from L.Renderer or L.Canvas
+    var CanvasIconLayer = L.Layer.extend({
+        // todo inherit from L.Renderer or L.Canvas
 
         options: L.Canvas.prototype.options,
 
@@ -130,14 +143,15 @@ function layerFactory (L, rbush) {
             this._pointsIdx.clear();
         },
 
-        getEvents: function () { // todo use L.Renderer.prototype.getEvents
+        getEvents: function () {
+            // todo use L.Renderer.prototype.getEvents
             var events = {
                 viewreset: this._reset,
                 zoom: this._onZoom,
                 moveend: this._update,
                 click: this._onClick,
                 mousemove: this._onMouseMove,
-                mouseout: this._handleMouseOut
+                mouseout: this._handleMouseOut,
             };
             if (this._zoomAnimated) {
                 events.zoomanim = this._onAnimZoom;
@@ -191,11 +205,17 @@ function layerFactory (L, rbush) {
 
             // Only re-draw what we are showing on the map.
             var isEmpty = true;
-            this._latlngsIdx.searchIn(mapBounds).forEach(function (marker) {
+            const markersInsideBounds = this._latlngsIdx.searchIn(mapBounds);
+            markersInsideBounds.sort((a, b) => {
+                return a.options.zIndexOffset - b.options.zIndexOffset;
+            });
+            markersInsideBounds.forEach(function (marker) {
                 // Readjust Point Map
-                if (!marker._map) { marker._map = this._map; } // todo ??implement proper handling in (on)add*/remove*
+                if (!marker._map) {
+                    marker._map = this._map;
+                } // todo ??implement proper handling in (on)add*/remove*
                 this._drawMarker(marker);
-                this._pointsIdx.insert(marker,true);
+                this._pointsIdx.insert(marker, true);
                 isEmpty = false;
             }, this);
             this._drawing = false;
@@ -225,7 +245,7 @@ function layerFactory (L, rbush) {
                     queued = {
                         loaded: false,
                         img: img,
-                        queue: [marker]
+                        queue: [marker],
                     };
                     this._imageLookup[iconUrl] = queued;
                     img.onload = function () {
@@ -237,7 +257,8 @@ function layerFactory (L, rbush) {
                         }, this);
                     }.bind(this);
                 }
-            } else if (queued.loaded) { // image may be not loaded / bad url
+            } else if (queued.loaded) {
+                // image may be not loaded / bad url
                 this._drawImage(marker);
             }
         },
@@ -255,12 +276,17 @@ function layerFactory (L, rbush) {
         },
 
         _onClick: function (e) {
-            var point = e.layerPoint || this._map.mouseEventToLayerPoint(e), clickedLayer;
+            var point = e.layerPoint || this._map.mouseEventToLayerPoint(e),
+                clickedLayer;
 
-            var layer_intersect = this._pointsIdx && this._pointsIdx.searchBy(point);
+            var layer_intersect =
+                this._pointsIdx && this._pointsIdx.searchBy(point);
             if (layer_intersect) {
                 layer_intersect.forEach(function (layer) {
-                    if (layer.options.interactive && !this._map._draggableMoved(layer)) {
+                    if (
+                        layer.options.interactive &&
+                        !this._map._draggableMoved(layer)
+                    ) {
                         clickedLayer = layer;
                     }
                 }, this);
@@ -272,7 +298,13 @@ function layerFactory (L, rbush) {
         },
 
         _onMouseMove: function (e) {
-            if (!this._map || this._map.dragging.moving() || this._map._animatingZoom) { return; }
+            if (
+                !this._map ||
+                this._map.dragging.moving() ||
+                this._map._animatingZoom
+            ) {
+                return;
+            }
 
             var point = e.layerPoint || this._map.mouseEventToLayerPoint(e);
             this._handleMouseHover(e, point);
@@ -283,7 +315,8 @@ function layerFactory (L, rbush) {
                 return;
             }
             var candidateHoveredLayer;
-            var layer_intersect = this._pointsIdx && this._pointsIdx.searchBy(point);
+            var layer_intersect =
+                this._pointsIdx && this._pointsIdx.searchBy(point);
             if (layer_intersect) {
                 layer_intersect.forEach(function (layer) {
                     if (layer.options.interactive) {
@@ -296,8 +329,8 @@ function layerFactory (L, rbush) {
                 this._handleMouseOut(e);
 
                 if (candidateHoveredLayer) {
-                    L.DomUtil.addClass(this._container, 'leaflet-interactive'); // change cursor
-                    this._fireEvent([candidateHoveredLayer], e, 'mouseover');
+                    L.DomUtil.addClass(this._container, "leaflet-interactive"); // change cursor
+                    this._fireEvent([candidateHoveredLayer], e, "mouseover");
                     this._hoveredLayer = candidateHoveredLayer;
                 }
             }
@@ -307,13 +340,16 @@ function layerFactory (L, rbush) {
             }
 
             this._mouseHoverThrottled = true;
-            setTimeout(L.bind(function () {
-                this._mouseHoverThrottled = false;
-            }, this), 32);
+            setTimeout(
+                L.bind(function () {
+                    this._mouseHoverThrottled = false;
+                }, this),
+                32
+            );
         },
 
         _handleMouseOut: function (e) {
-            L.Canvas.prototype._handleMouseOut.call(this,e);
+            L.Canvas.prototype._handleMouseOut.call(this, e);
         },
 
         _fireEvent: function (layers, e, type) {
@@ -342,11 +378,16 @@ function layerFactory (L, rbush) {
 
         // Adds single layer at a time. Less efficient for rBush
         addMarker: function (marker, groupID) {
-            groupID = groupID ? groupID.toString() : '0';
+            groupID = groupID ? groupID.toString() : "0";
             this._groupIDs = this._groupIDs || {};
 
             var latlng = marker.getLatLng();
-            var isDisplaying = this._map && this._map.getBounds().pad(this.options.padding).contains(latlng);
+            var isDisplaying =
+                this._map &&
+                this._map
+                    .getBounds()
+                    .pad(this.options.padding)
+                    .contains(latlng);
             this._addMarker(marker, latlng, isDisplaying);
             this._groupIDs[groupID] = (this._groupIDs[groupID] || 0) + 1;
             marker._canvasGroupID = groupID;
@@ -354,16 +395,17 @@ function layerFactory (L, rbush) {
         },
 
         addLayer: function (layer, groupID) {
-            return this.addMarker(layer,groupID);
+            return this.addMarker(layer, groupID);
         },
 
         // Multiple layers at a time for rBush performance
         addMarkers: function (markers, groupID) {
-            groupID = groupID ? groupID.toString() : '0';
+            groupID = groupID ? groupID.toString() : "0";
             this._groupIDs = this._groupIDs || {};
             this._groupIDs[groupID] = this._groupIDs[groupID] || 0;
 
-            var mapBounds = this._map && this._map.getBounds().pad(this.options.padding);
+            var mapBounds =
+                this._map && this._map.getBounds().pad(this.options.padding);
             markers.sort((a, b) => {
                 return a.options.zIndexOffset - b.options.zIndexOffset;
             });
@@ -380,7 +422,7 @@ function layerFactory (L, rbush) {
         },
 
         addLayers: function (layers, groupID) {
-            return this.addMarkers(layers,groupID);
+            return this.addMarkers(layers, groupID);
         },
 
         removeGroups: function (groupIDs) {
@@ -399,21 +441,34 @@ function layerFactory (L, rbush) {
 
         _removeGroup: function (groupID) {
             groupID = groupID.toString();
-            if (!this._groupIDs[groupID]) { return; }
+            if (!this._groupIDs[groupID]) {
+                return;
+            }
             delete this._groupIDs[groupID];
-            this._latlngsIdx.all().filter(function (marker) {
-                return marker._canvasGroupID === groupID;
-            }).forEach(function (el) {
-                this.removeMarker(el, false, true);
-            }, this);
+            this._latlngsIdx
+                .all()
+                .filter(function (marker) {
+                    return marker._canvasGroupID === groupID;
+                })
+                .forEach(function (el) {
+                    this.removeMarker(el, false, true);
+                }, this);
         },
 
         removeMarker: function (marker, redraw, hasLayer) {
-            if (!hasLayer && !this.hasLayer(marker)) { return; }
+            if (!hasLayer && !this.hasLayer(marker)) {
+                return;
+            }
             this._latlngsIdx.remove(marker);
 
-            if (redraw && this._map &&
-                  this._map.getBounds().pad(this.options.padding).contains(marker.getLatLng())) {
+            if (
+                redraw &&
+                this._map &&
+                this._map
+                    .getBounds()
+                    .pad(this.options.padding)
+                    .contains(marker.getLatLng())
+            ) {
                 this._redraw();
             }
             marker.removeEventParent(this);
@@ -445,10 +500,12 @@ function layerFactory (L, rbush) {
         },
 
         _hideContainer: function (hide) {
-            if (this._isEmpty === hide) { return; }
+            if (this._isEmpty === hide) {
+                return;
+            }
             this._isEmpty = hide;
-            this._container.style.display = hide ? 'none' : 'initial';
-        }
+            this._container.style.display = hide ? "none" : "initial";
+        },
     });
 
     L.canvasIconLayer = function (options) {
