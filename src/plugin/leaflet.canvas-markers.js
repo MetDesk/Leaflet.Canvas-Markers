@@ -364,6 +364,9 @@ function layerFactory (L, rbush) {
             this._groupIDs[groupID] = this._groupIDs[groupID] || 0;
 
             var mapBounds = this._map && this._map.getBounds().pad(this.options.padding);
+            markers.sort((a, b) => {
+                return a.options.zIndexOffset - b.options.zIndexOffset;
+            });
             markers.forEach(function (marker) {
                 var latlng = marker.getLatLng();
                 var isDisplaying = mapBounds && mapBounds.contains(latlng);
