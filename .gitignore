@@ -58,3 +58,5 @@ typings/
 .env
 
 dist/
+
+.yarn/install-state.gz
