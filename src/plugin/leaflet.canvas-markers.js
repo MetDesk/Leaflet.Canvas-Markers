@@ -205,19 +205,21 @@ function layerFactory(L, rbush) {
 
             // Only re-draw what we are showing on the map.
             var isEmpty = true;
+            // Draw them in the order from oldest to newest for correct overlaps
             const markersInsideBounds = this._latlngsIdx.searchIn(mapBounds);
-            markersInsideBounds.sort((a, b) => {
-                return a.options.zIndexOffset - b.options.zIndexOffset;
-            });
-            markersInsideBounds.forEach(function (marker) {
-                // Readjust Point Map
-                if (!marker._map) {
-                    marker._map = this._map;
-                } // todo ??implement proper handling in (on)add*/remove*
-                this._drawMarker(marker);
-                this._pointsIdx.insert(marker, true);
-                isEmpty = false;
-            }, this);
+            [5, 4, 3, 2, 1, 0].forEach((iconIndex) =>
+                markersInsideBounds
+                    .filter((m) => m.options.iconIndex === iconIndex)
+                    .forEach(function (marker) {
+                        // Readjust Point Map
+                        if (!marker._map) {
+                            marker._map = this._map;
+                        } // todo ??implement proper handling in (on)add*/remove*
+                        this._drawMarker(marker);
+                        this._pointsIdx.insert(marker, true);
+                        isEmpty = false;
+                    }, this)
+            );
             this._drawing = false;
             // Clear rBush & Bulk Load for performance
             this._pointsIdx.clear().flush();
@@ -406,16 +408,20 @@ function layerFactory(L, rbush) {
 
             var mapBounds =
                 this._map && this._map.getBounds().pad(this.options.padding);
-            markers.sort((a, b) => {
-                return a.options.zIndexOffset - b.options.zIndexOffset;
-            });
-            markers.forEach(function (marker) {
-                var latlng = marker.getLatLng();
-                var isDisplaying = mapBounds && mapBounds.contains(latlng);
-                this._addMarker(marker, latlng, isDisplaying, true);
-                this._groupIDs[groupID]++;
-                marker._canvasGroupID = groupID;
-            }, this);
+
+            // Draw them in the order from oldest to newest for correct overlaps
+            [5, 4, 3, 2, 1, 0].forEach((iconIndex) =>
+                markers
+                    .filter((m) => m.options.iconIndex === iconIndex)
+                    .forEach(function (marker) {
+                        var latlng = marker.getLatLng();
+                        var isDisplaying =
+                            mapBounds && mapBounds.contains(latlng);
+                        this._addMarker(marker, latlng, isDisplaying, true);
+                        this._groupIDs[groupID]++;
+                        marker._canvasGroupID = groupID;
+                    }, this)
+            );
             this._pointsIdx.flush();
             this._latlngsIdx.flush();
             return this;
