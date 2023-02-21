@@ -294,7 +294,11 @@ function layerFactory(L, rbush) {
                 }, this);
             }
             if (clickedLayer) {
-                L.DomEvent.fakeStop(e);
+                const fakeStop =
+                    L.DomEvent.fakeStop ||
+                    L.DomEvent._fakeStop ||
+                    L.DomEvent.stop;
+                fakeStop && fakeStop(e);
                 this._fireEvent([clickedLayer], e);
             }
         },
@@ -422,6 +426,7 @@ function layerFactory(L, rbush) {
                         marker._canvasGroupID = groupID;
                     }, this)
             );
+
             this._pointsIdx.flush();
             this._latlngsIdx.flush();
             return this;
