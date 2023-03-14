@@ -8,10 +8,10 @@
     "lib": "dist"
   },
   "scripts": {
-    "build:test": "set NODE_ENV=test&& webpack",
-    "build": "NODE_ENV=prod&& webpack",
-    "watch": "set NODE_ENV=test&& webpack --watch",
-    "prepare": "npm run build"
+    "esbuild": "rm -rf ./dist && node build.mjs",
+    "build:test": "NODE_ENV=test && yarn esbuild",
+    "build": "NODE_ENV=prod && yarn esbuild",
+    "watch": "NODE_ENV=development && webpack --watch"
   },
   "keywords": [
     "leaflet",
@@ -26,6 +26,7 @@
     "url": "https://github.com/Spaction/Leaflet.Canvas-Markers.git"
   },
   "devDependencies": {
+    "esbuild": "^0.17.11",
     "script-loader": "^0.7.2",
     "uglifyjs-webpack-plugin": "^2.2.0",
     "webpack": "^4.41.0",
