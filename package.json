@@ -1,5 +1,5 @@
 {
-  "name": "@metdesk/leaflet-canvas-marker",
+  "name": "@metdesk/leaflet-canvas-markers",
   "version": "0.0.0",
   "description": "Leaflet plugin to display markers on canvas instead of DOM",
   "main": "dist/leaflet.canvas-markers.js",

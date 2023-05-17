@@ -1,4 +1,5 @@
 # Leaflet.Canvas-Markers
+
 Leaflet plugin for displaying markers on canvas instead of DOM. Working with Leaflet 1.0.0 and above.
 Feel free to contribute
 
@@ -21,7 +22,7 @@ Now attach layer to map and some markers.
 var ciLayer = L.canvasIconLayer().addTo(map);
 
 // Marker definition
-var marker =  L.marker([58.5578, 29.0087], {icon: icon});
+var marker = L.marker([58.5578, 29.0087], { icon: icon });
 
 // Adding marker to layer
 ciLayer.addMarker(marker);
